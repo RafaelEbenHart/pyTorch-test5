@@ -1,0 +1,115 @@
+<!--
+Project layout (put these files in the same folder)
+- backend.py         # FastAPI server (serves / and /predict)
+- index.html         # this file (frontend)
+- model.pth          # your trained weights
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Classifier Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container my-5">
+
+  <h1 class="mb-3">Image Classifier Demo</h1>
+  <p class="text-muted">Upload an image → the server returns your model's predicted label.</p>
+
+  <div class="card p-4 shadow-sm">
+    <div class="row g-4 align-items-start">
+
+      <!-- Upload & Button -->
+      <div class="col-md-6">
+        <label for="file" class="form-label">Choose image</label>
+        <input id="file" type="file" accept="image/*" class="form-control mb-2" />
+        <p class="text-muted small">Supported: PNG / JPG / JPEG / WebP</p>
+        <button id="btn" class="btn btn-primary">Predict</button>
+      </div>
+
+      <!-- Preview and results -->
+      <div class="col-md-6">
+        <div class="mb-2">
+          <span id="status" class="badge bg-secondary">Idle</span>
+          <div id="out" class="fs-4 fw-semibold mt-2"></div>
+          <div id="meta" class="text-muted"></div>
+        </div>
+
+        <img id="preview" alt="preview" class="border rounded" style="width: 100%; height: 450px; object-fit: cover;" />
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const fileEl = document.getElementById('file');
+    const btn = document.getElementById('btn');
+    const preview = document.getElementById('preview');
+    const statusEl = document.getElementById('status');
+    const outEl = document.getElementById('out');
+    const metaEl = document.getElementById('meta');
+
+    fileEl.addEventListener('change', () => {
+      const f = fileEl.files?.[0];
+      if (!f) return;
+      preview.src = URL.createObjectURL(f);
+      outEl.textContent = '';
+      metaEl.textContent = '';
+      statusEl.textContent = 'Ready';
+      statusEl.className = "badge bg-info";
+    });
+
+    btn.addEventListener('click', async () => {
+      const f = fileEl.files?.[0];
+      if (!f) { alert('Please choose an image first.'); return; }
+      btn.disabled = true;
+      statusEl.textContent = 'Predicting…';
+      statusEl.className = "badge bg-warning text-dark";
+      outEl.textContent = '';
+
+      const fd = new FormData();
+      fd.append('file', f);
+
+      try {
+        const res = await fetch('/predict', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('Request failed: ' + res.status);
+        const data = await res.json();
+        outEl.textContent = data.label ?? '(no label)';
+        metaEl.textContent = data.confidence != null
+          ? `confidence: ${(data.confidence * 100).toFixed(2)}%`
+          : '';
+        statusEl.textContent = 'Done';
+        statusEl.className = "badge bg-success";
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = 'Error';
+        statusEl.className = "badge bg-danger";
+        outEl.textContent = 'Prediction failed. See console.';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+<!-- ========================= Quickstart =========================
+1) Create a folder and put: index.html, backend.py, model.pth
+2) Install deps:
+   pip install fastapi uvicorn pillow torch torchvision
+3) Run server:
+   python backend.py
+4) Open http://localhost:8000 in your browser, upload an image, see the predicted label.
+
+Notes:
+- Match the preprocessing (Resize/Crop/Normalize) to whatever you used during training.
+- Update num_classes and class_names to your dataset labels.
+- If your model is not EfficientNet-B0, replace architecture accordingly and load weights.
+- For GPU: call model.to('cuda') and move tensor x = x.to('cuda').
+- To return top-5: sort probabilities and return the top indices/labels.
+================================================================================ -->

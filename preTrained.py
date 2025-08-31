@@ -39,7 +39,7 @@ test_dir = "data/photo/test"
 
 aug_manual_transfroms = transforms.Compose([
     transforms.Resize(size=(224,224)),
-    transforms.TrivialAugmentWide(num_magnitude_bins=10),
+    transforms.TrivialAugmentWide(num_magnitude_bins=31),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                         std=[0.229, 0.224, 0.225])
@@ -141,7 +141,7 @@ loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(params=model.parameters(),
                              lr=0.001)
 
-model_results = train_test_loop(epochs=9,
+model_results = train_test_loop(epochs=20,
                                 model=model,
                                 lossFn=loss_fn,
                                 optimizer=optimizer,
@@ -163,4 +163,6 @@ pred_and_plot_image(model=model,
                     class_names=class_name,
                     transform=image_custom_transform,
                     device=device)
-plt.show()
+# plt.show()
+
+Save(path="models",name="preTrainedModel.pth",model=model)
