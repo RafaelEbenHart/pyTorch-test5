@@ -30,7 +30,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # ---- Load model ----
 # Adjust to your architecture & number of classes
 num_classes = 3
-class_names = ["anomali", "master", "owi"]
+class_names = ["rafa", "master", "owi"]
 
 # Create model architecture
 weight = EfficientNet_B0_Weights.IMAGENET1K_V1
